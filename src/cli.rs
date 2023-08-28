@@ -8,10 +8,12 @@ use crate::helpers::{
     validate_sl_price, validate_tp_price, validate_value, validate_value_size,
 };
 use crate::hyperliquid::meta_info::calculate_asset_to_id;
-use crate::hyperliquid::open_orders::{get_side_from_oid, get_sz_from_oid};
+use crate::hyperliquid::open_orders::{get_side_from_oid, get_sz_from_oid, get_user_open_orders};
 
 use crate::hyperliquid::order::{build_buy_order, build_sell_order};
 use crate::hyperliquid::order_payload::{Limit, OrderType, Orders};
+use crate::hyperliquid::open_positions::get_user_state;
+use crate::hyperliquid::user_fills::get_user_fills;
 use clap::{App, Arg};
 use std::num::ParseFloatError;
 
@@ -1092,15 +1094,21 @@ pub async fn cli() {
         ("view", Some(view_matches)) => match view_matches.subcommand_name() {
             Some("pnl") => {
                 println!("Implement view pnl logic");
+                let user_pnl = get_user_open_orders().await;
+                println! ("User pnl: {:#?}", user_pnl)                
             }
             Some("wallet") => {
                 println!("Implement view wallet balance logic");
             }
             Some("unfilled") => {
                 println!("Implement view unfilled orders logic");
+                let user_fills = get_user_fills().await;
+                println! ("User fills: {:#?}", user_fills)
             }
             Some("open") => {
-                println!("Implement view open positions logic")
+                println!("Implement view open positions logic");
+                let user_state = get_user_state().await;
+                println! ("User state: {:#?}", user_state)                
             }
             _ => {
                 println!(
@@ -1137,8 +1145,9 @@ pub async fn cli() {
                     );
 
                     if let Some(lp) = limit_price {
-                        println!("Entering at this : {} limit price", lp);
+                        println!("Waiting for asset ratio to get to this: {} ratio", lp);
                     } else {
+
                         println!(" Entering at Market price");
                     }
                     if let Some(sl) = stop_loss {

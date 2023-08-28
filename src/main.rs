@@ -9,6 +9,7 @@ pub mod hyperliquid {
     pub mod order;
     pub mod order_payload;
     pub mod order_responses;
+    pub mod user_fills;
 }
 
 use settings::Settings;

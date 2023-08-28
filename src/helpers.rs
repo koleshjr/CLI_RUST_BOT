@@ -3,9 +3,9 @@ use crate::hyperliquid::order::{
 };
 use crate::hyperliquid::order_payload::GainOptions;
 use crate::hyperliquid::order_payload::{OrderPayload, Orders};
-use std::time::{SystemTime, UNIX_EPOCH};
-use rand::Rng;
 use hex;
+use rand::Rng;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn validate_value_size(value: String) -> Result<(), String> {
     if value.ends_with('%') {

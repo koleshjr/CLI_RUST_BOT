@@ -1,10 +1,9 @@
+use crate::helpers::{generate_transaction_signature, get_current_time_in_milliseconds};
 use crate::hyperliquid::order_payload::{
     GainOptions, OrderPayload, OrderType, Orders, RequestBody, Trigger,
 };
 use crate::hyperliquid::order_responses::PlaceResponse;
-use crate::helpers::{get_current_time_in_milliseconds, generate_transaction_signature};
 use reqwest::Client;
-
 
 pub async fn place_order(
     order_payload: OrderPayload,
@@ -36,7 +35,6 @@ pub async fn place_order(
 //         place_order(order_payload.clone()).await;
 //     }
 // }
-
 
 pub fn handle_tp_logic(gain: GainOptions, is_buy: bool, gain_flag: bool) -> Trigger {
     let mut trigger = Trigger::new("tp");
