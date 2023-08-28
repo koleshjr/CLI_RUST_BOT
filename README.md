@@ -1,2 +1,2 @@
-# CLI_RUST_BOT
-Building a Trading Bot
+# hyperliquid
+A bot for interacting with hyperliquid exchange.
