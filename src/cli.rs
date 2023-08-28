@@ -10,8 +10,9 @@ use crate::helpers::{
 use crate::hyperliquid::meta_info::calculate_asset_to_id;
 use crate::hyperliquid::open_orders::{get_side_from_oid, get_sz_from_oid};
 
-use crate::hyperliquid::order::{build_buy_order, build_sell_order};
-use crate::hyperliquid::order_payload::{Limit, OrderType, Orders};
+use crate::hyperliquid::order::{build_buy_order_payload, build_sell_order_payload, build_buy_order_helper, build_sell_order_helper,
+    place_twap_order};
+use crate::hyperliquid::order_payload::{Limit, OrderType, Orders, OrderPayload};
 use clap::{App, Arg};
 use std::num::ParseFloatError;
 
@@ -803,7 +804,7 @@ pub async fn cli() {
                 println!("No sell was provided");
             }
 
-            let buy_payload = build_buy_order(buy_order, tp_order, sl_order);
+            let buy_payload = build_buy_order_payload(buy_order, tp_order, sl_order);
             println!("Buy payload Confirmation: {:#?}", buy_payload);
         }
 
@@ -932,7 +933,7 @@ pub async fn cli() {
                 println!("No TP was provided");
             }
 
-            let sell_payload = build_sell_order(sell_order, tp_order, sl_order);
+            let sell_payload = build_sell_order_payload(sell_order, tp_order, sl_order);
             println!("Sell payload Confirmation: {:#?}", sell_payload);
         }
 
@@ -1032,23 +1033,34 @@ pub async fn cli() {
                         .collect();
 
                     println!(
-                        "twap sell order size: {}, asset-symbol: {}, intervals: {:?}-> Interval1: {:?}",
+                        "twap buy order size: {}, asset-symbol: {}, intervals: {:?}-> Interval1: {:?}",
                         order_size,
                         asset,
                         intervals,
                         intervals.get(0)
                     );
 
-                    let interval_minutes: f64 =
+                    let interval_minutes: u64 =
                         intervals[0].parse().expect("Invalid Interval Value");
-                    let interval_range: f64 = intervals[1].parse().expect("Invalid interval Value");
+                    let interval_range: u64 = intervals[1].parse().expect("Invalid interval Value");
 
-                    let amount_asset = order_size / interval_range;
+                    let amount_asset:String = (order_size / interval_range as f64).to_string();
 
                     println!(
                         "Buying {} {} at intervals of {} minutes ",
                         amount_asset, asset, interval_minutes
                     );
+
+                    let is_buy = true;
+                    let reduce_only = false;
+                    let limit_px = "1990"; //let this be the current market price for example
+                    let asset:u32 = calculate_asset_to_id(asset);
+                    let buy_order = build_buy_order_helper(asset, is_buy, limit_px, &amount_asset, reduce_only);
+                    let buy_payload: OrderPayload = build_buy_order_payload(buy_order, None, None);
+                    
+                    let response = place_twap_order(buy_payload, interval_minutes, interval_range).await;
+                    println!("Response: {:#?}", response);
+
 
                     //twap sell <total order size> <asset symbol>  <time between interval in mins, number of intervals>
                 }
@@ -1083,6 +1095,15 @@ pub async fn cli() {
                         "Selling {} {} at intervals of {} minutes",
                         amount_asset, asset, interval_minutes
                     );
+
+                    let is_buy = false;
+                    let reduce_only = false;
+                    let limit_px = "1990"; //let this be the current market price for example
+                    let asset:u32 = calculate_asset_to_id(asset);
+                    let sell_order = build_sell_order_helper(asset, is_buy, limit_px, &amount_asset.to_string(), reduce_only);
+                    let sell_payload: OrderPayload = build_sell_order_payload(sell_order, None, None);
+                    let response = place_twap_order(sell_payload, interval_minutes as u64, interval_range as u64).await;
+                    println!("Response: {:#?}", response);
                 }
                 _ => {
                     println!("No subcommand was used");

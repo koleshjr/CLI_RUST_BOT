@@ -1,5 +1,5 @@
 use crate::hyperliquid::order_payload::{
-    GainOptions, OrderPayload, OrderType, Orders, RequestBody, Trigger,
+    GainOptions, OrderPayload, OrderType, Orders, RequestBody, Trigger,Limit
 };
 use crate::hyperliquid::order_responses::PlaceResponse;
 use crate::helpers::{get_current_time_in_milliseconds, generate_transaction_signature};
@@ -29,13 +29,14 @@ pub async fn place_order(
     Ok(resp)
 }
 
-// pub async fn place_twap_order(order_payload: OrderPayload, time_between_intervals_in_minutes: u64, intervals: u64){
-//     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(time_between_intervals_in_minutes * 60));
-//     for _ in 0..intervals {
-//         interval.tick().await;
-//         place_order(order_payload.clone()).await;
-//     }
-// }
+pub async fn place_twap_order(order_payload: OrderPayload, time_between_intervals_in_minutes: u64, intervals: u64){
+    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(time_between_intervals_in_minutes * 60));
+    for i in 0..intervals {
+        interval.tick().await;
+        let response = place_order(order_payload.clone()).await;
+        println!("Order {} placed : {:?}",i+1, response);
+    }
+}
 
 
 pub fn handle_tp_logic(gain: GainOptions, is_buy: bool, gain_flag: bool) -> Trigger {
@@ -219,7 +220,7 @@ pub fn build_sl_order_helper(
     sl_order
 }
 
-pub fn build_buy_order(
+pub fn build_buy_order_payload(
     buy_order: Orders,
     tp_order: Option<Orders>,
     sl_order: Option<Orders>,
@@ -238,7 +239,7 @@ pub fn build_buy_order(
     order_payload
 }
 
-pub fn build_sell_order(
+pub fn build_sell_order_payload(
     sell_order: Orders,
     tp_order: Option<Orders>,
     sl_order: Option<Orders>,
@@ -255,4 +256,40 @@ pub fn build_sell_order(
     }
 
     order_payload
+}
+
+pub fn build_buy_order_helper(
+    asset: u32,
+    is_buy: bool,
+    limit_px: &str,
+    sz: &str,
+    reduce_only: bool,
+) -> Orders {
+    let mut buy_order = Orders::new();
+    let limit:Limit = Limit::new();
+    buy_order.set_asset(asset);
+    buy_order.set_is_buy(is_buy);
+    buy_order.set_limit_px(&limit_px);
+    buy_order.set_sz(&sz);
+    buy_order.set_reduce_only(reduce_only);
+    buy_order.set_order_type(OrderType::Limit(limit));
+    buy_order
+}
+
+pub fn build_sell_order_helper(
+    asset: u32,
+    is_buy: bool,
+    limit_px: &str,
+    sz: &str,
+    reduce_only: bool,
+) -> Orders {
+    let mut sell_order = Orders::new();
+    let limit:Limit = Limit::new();
+    sell_order.set_asset(asset);
+    sell_order.set_is_buy(is_buy);
+    sell_order.set_limit_px(&limit_px);
+    sell_order.set_sz(&sz);
+    sell_order.set_reduce_only(reduce_only);
+    sell_order.set_order_type(OrderType::Limit(limit));
+    sell_order
 }

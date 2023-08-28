@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct OrderPayload {
     pub type_: String,
     pub grouping: String,
@@ -18,7 +18,7 @@ impl OrderPayload {
         self.orders.push(order);
     }
 }
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Orders {
     pub asset: Option<u32>,
     pub isbuy: Option<bool>,
@@ -27,7 +27,7 @@ pub struct Orders {
     pub reduceonly: Option<bool>,
     pub ordertype: Option<OrderType>,
 }
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub enum OrderType {
     Limit(Limit),
     Trigger(Trigger),
@@ -74,7 +74,7 @@ impl Orders {
         self.ordertype = Some(order_type);
     }
 }
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Limit {
     pub tif: String,
 }
@@ -86,7 +86,7 @@ impl Limit {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Trigger {
     pub tpsl: String,
     pub trigger_px: Option<f64>,
